@@ -1,0 +1,6 @@
+@NordicNest_HostAddress = http://localhost:5018
+
+GET {{NordicNest_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
