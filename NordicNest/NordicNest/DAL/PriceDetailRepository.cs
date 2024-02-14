@@ -13,7 +13,7 @@ namespace NordicNest.DAL
         public IEnumerable<PriceDetail> GetPriceDetails()
         {
             // Some kinda fake db lookup as such.
-            return _fakeDbContext.Values.Select(v => v.Value);
+            return _fakeDbContext.Values.Take(5).Select(v => v.Value);
         }
     }
 }
