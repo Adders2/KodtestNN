@@ -11,9 +11,15 @@ namespace NordicNest.Services
         {
             _priceDetailRepository = repository;
         }
-        public IEnumerable<PriceDetail> GetPriceDetails()
+
+        public PriceDetail GetPriceDetail(string id)
         {
-            return _priceDetailRepository.GetPriceDetails();
+            return _priceDetailRepository.GetPriceDetail(id);
+        }
+
+        public IEnumerable<PriceDetail> GetPriceDetails(string id)
+        {
+            return _priceDetailRepository.GetPriceDetails(id);
         }
     }
 }

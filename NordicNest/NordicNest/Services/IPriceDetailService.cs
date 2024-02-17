@@ -4,6 +4,8 @@ namespace NordicNest.Services
 {
     public interface IPriceDetailService
     {
-        IEnumerable<PriceDetail> GetPriceDetails();
+        IEnumerable<PriceDetail> GetPriceDetails(string id);
+
+        PriceDetail GetPriceDetail(string id);
     }
 }

@@ -4,6 +4,7 @@ namespace NordicNest.DAL
 {
     public interface IPriceDetailRepository
     {
-        IEnumerable<PriceDetail> GetPriceDetails();
+        PriceDetail GetPriceDetail(string id);
+        IEnumerable<PriceDetail> GetPriceDetails(string id);
     }
 }

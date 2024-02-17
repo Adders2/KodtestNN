@@ -16,9 +16,18 @@ namespace NordicNest.Controllers
         }
 
         [HttpGet]
-        public ActionResult<IEnumerable<PriceDetail>> GetAll()
+        public IActionResult Index()
         {
-            return _priceDetailService.GetPriceDetails().ToList();
+            return Ok();
+        }
+
+        [HttpGet]
+        [Route("{id}")]
+        public ActionResult<IEnumerable<PriceDetail>> GetPriceDetails(string id)
+        {
+            // TODO: Viewmodel for aggregating the data more nicely. Automapper?
+            return _priceDetailService.GetPriceDetails(id)
+                .ToList();
         }
     }
 }

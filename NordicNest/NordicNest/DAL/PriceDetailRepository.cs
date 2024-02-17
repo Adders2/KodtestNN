@@ -10,10 +10,17 @@ namespace NordicNest.DAL
             _fakeDbContext = fakeDbContext;
         }
 
-        public IEnumerable<PriceDetail> GetPriceDetails()
+        public PriceDetail GetPriceDetail(string id)
+        {
+            return _fakeDbContext.Values.FirstOrDefault(v => v.Value.CatalogEntryCode == id).Value;
+        }
+
+        public IEnumerable<PriceDetail> GetPriceDetails(string id)
         {
             // Some kinda fake db lookup as such.
-            return _fakeDbContext.Values.Take(5).Select(v => v.Value);
+            return _fakeDbContext.Values
+                .Where(v => v.Value.CatalogEntryCode == id)
+                .Select(v => v.Value);
         }
     }
 }
