@@ -1,11 +1,10 @@
 ﻿using NordicNest.Model;
+using NordicNest.Model.DTO;
 
 namespace NordicNest.Services
 {
     public interface IPriceDetailService
     {
-        IEnumerable<PriceDetail> GetPriceDetails(string id);
-
-        PriceDetail GetPriceDetail(string id);
+        IEnumerable<PriceDetailDTO> GetPriceDetails(string id);
     }
 }

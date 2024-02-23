@@ -12,7 +12,7 @@
 
         public string MarketId { get; set; }
 
-        // Valutekod (kanske enum istället)
+        // Valutakod (kanske enum istället)
         public string CurrencyCode { get; set; }
 
         public DateTime? ValidFrom { get; set; }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using NordicNest.Model;
+using NordicNest.Model.DTO;
 using NordicNest.Services;
 
 namespace NordicNest.Controllers
@@ -23,9 +24,8 @@ namespace NordicNest.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public ActionResult<IEnumerable<PriceDetail>> GetPriceDetails(string id)
+        public ActionResult<IEnumerable<PriceDetailDTO>> GetPriceDetails(string id)
         {
-            // TODO: Viewmodel for aggregating the data more nicely. Automapper?
             return _priceDetailService.GetPriceDetails(id)
                 .ToList();
         }

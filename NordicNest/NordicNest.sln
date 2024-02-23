@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34525.116
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NordicNest", "NordicNest\NordicNest.csproj", "{8A30524B-134C-49F4-9C3E-E4C464117FAC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NordicNest", "NordicNest\NordicNest.csproj", "{8A30524B-134C-49F4-9C3E-E4C464117FAC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
