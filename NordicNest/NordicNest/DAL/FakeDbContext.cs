@@ -13,7 +13,7 @@ namespace NordicNest.DAL
             var path = Path.Combine(currentDir, "../../../price_detail.csv");
             var filePath = Path.GetFullPath(path);
 
-            // TODO: Don't like doing this in a constructor... maybe in Program.cs instead.
+            // Don't like doing this in a constructor... maybe in Program.cs instead.
             File.ReadAllLines(filePath)
                 .Skip(1)
                 .ToList().ForEach(v => ReadCSVContent(v));

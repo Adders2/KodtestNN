@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using NordicNest.Controllers.VM;
 using NordicNest.Model;
 using NordicNest.Model.DTO;
 using NordicNest.Services;
@@ -24,10 +25,13 @@ namespace NordicNest.Controllers
 
         [HttpGet]
         [Route("{id}")]
-        public ActionResult<IEnumerable<PriceDetailDTO>> GetPriceDetails(string id)
+        public ActionResult<IEnumerable<PriceDetailsViewModel>> GetPriceDetails(string id)
         {
-            return _priceDetailService.GetPriceDetails(id)
-                .ToList();
+            var priceDetails = _priceDetailService.GetPriceDetails(id);
+
+            var vm = priceDetails.Select(pd => new PriceDetailsViewModel(pd)).ToList();
+
+            return Ok(vm);
         }
     }
 }
