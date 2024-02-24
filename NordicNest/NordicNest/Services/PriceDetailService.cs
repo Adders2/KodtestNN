@@ -20,7 +20,6 @@ namespace NordicNest.Services
             return GetPriceIntervals(priceDetails);
         }
 
-      
         private List<PriceDetailDTO> GetPriceIntervals(IEnumerable<PriceDetail> priceDetails)
         {
             var ordered = priceDetails.OrderBy(pd => pd.ValidFrom);
@@ -34,54 +33,87 @@ namespace NordicNest.Services
             {
                 var basePrice = grouping.FirstOrDefault();
 
-                for (int i = 0; i < grouping.Count(); i++)
+                if (basePrice == null)
                 {
-                    var priceDetail = grouping.ElementAtOrDefault(i);
+                    break;
+                }
 
-                    if (priceDetail != null)
+                var remaining = grouping.Where(pd => IsValidPriceChange(basePrice, pd));
+
+                if (remaining.Count() == 1)
+                {
+                    priceDetailDTOs.Add(new PriceDetailDTO(basePrice));
+                }
+                else
+                {
+                    for (int i = 0; i < remaining.Count(); i++)
                     {
-                        var nextValid = GetNextValidPriceDTO(priceDetail, grouping);
+                        var priceDetail = remaining.ElementAtOrDefault(i);
 
-                        if (nextValid == null)
+                        // Cheaper and later start date.
+                        var nextValidOne = remaining.FirstOrDefault(pd =>
                         {
-                            priceDetailDTOs.Add(new PriceDetailDTO(priceDetail));
+                            return (pd.UnitPrice <= priceDetail.UnitPrice && pd.ValidFrom > priceDetail.ValidFrom);
+                        });
 
-                            var next = grouping.ElementAtOrDefault(i + 1);
-                            priceDetailDTOs.Add(
-                                new PriceDetailDTO(basePrice, validFrom: priceDetail?.ValidUntil, validUntil: next?.ValidFrom));
+                        var lastPriceDetail = remaining.ElementAtOrDefault(i - 1);
+
+                        // If it starts before current price and but is more expensive, skip it
+                        if (lastPriceDetail != null &&
+                            (priceDetail?.UnitPrice > lastPriceDetail.UnitPrice && priceDetail.ValidFrom < lastPriceDetail.ValidUntil))
+                        {
+                            continue;
                         }
+
+                        if (nextValidOne != null)
+                        {
+                            // Starts later than current ends. Should be current and baseprice beginning at current end, and ending at nextvalids start
+                            if (nextValidOne?.ValidFrom > priceDetail.ValidUntil)
+                            {
+                                if (priceDetail.PriceValueId == basePrice.PriceValueId)
+                                {
+                                    priceDetailDTOs.Add(new PriceDetailDTO(basePrice, validUntil: nextValidOne.ValidFrom));
+                                }
+                                else
+                                {
+                                    priceDetailDTOs.Add(new PriceDetailDTO(priceDetail));
+                                    priceDetailDTOs.Add(new PriceDetailDTO(basePrice, validFrom: priceDetail.ValidUntil, validUntil: nextValidOne.ValidFrom));
+                                }
+                            }
+                            // Starts earlier than current ends, cut current price short
+                            else if (nextValidOne?.ValidFrom < priceDetail.ValidUntil)
+                            {
+                                priceDetailDTOs.Add(new PriceDetailDTO(priceDetail, validUntil: nextValidOne.ValidFrom));
+                            }
+                        }
+                        // No other valid. Should be current price replaced by baseprice at its end
                         else
                         {
-                            priceDetailDTOs.Add(new PriceDetailDTO(priceDetail, validUntil: nextValid?.ValidFrom));
+                            priceDetailDTOs.Add(new PriceDetailDTO(priceDetail));
+                            priceDetailDTOs.Add(new PriceDetailDTO(basePrice, validFrom: priceDetail.ValidUntil));
                         }
                     }
                 }
             }
-
             return priceDetailDTOs;
         }
 
-        private PriceDetailDTO? GetNextValidPriceDTO(PriceDetail current, IEnumerable<PriceDetail> group)
+        private bool IsValidPriceChange(PriceDetail current, PriceDetail next)
         {
-            group = group.Where(pd => pd.PriceValueId != current.PriceValueId);
-
-            var nextValid = group.FirstOrDefault(pd =>
+            if (current.PriceValueId == next.PriceValueId)
             {
-                var nextStartsLaterThanCurrent = pd.ValidFrom > current.ValidFrom;
-                var currentHasNoEnd = current.ValidUntil.HasValue && current.ValidUntil.Value == DateTime.MinValue;
-                var nextStartsBeforeCurrentEnd = current.ValidUntil.HasValue && pd.ValidFrom < current.ValidUntil.Value;
-                var nextIsCheaperThanCurrent = pd.UnitPrice < current.UnitPrice;
+                return true;
+            }
 
-                // Should no price increases be allowed from "basePrice"? DKK for EN market seems to have an increase from baseprice...
-                return nextStartsLaterThanCurrent &&
-                    (currentHasNoEnd ||
-                    (nextStartsBeforeCurrentEnd && nextIsCheaperThanCurrent));
-            });
+            var nextStartsLaterThanCurrent = next.ValidFrom > current.ValidFrom;
+            var currentHasNoEnd = current.ValidUntil.HasValue && current.ValidUntil.Value == DateTime.MinValue;
+            var nextStartsBeforeCurrentEnd = current.ValidUntil.HasValue && next.ValidFrom < current.ValidUntil.Value;
+            var nextIsCheaperThanCurrent = next.UnitPrice < current.UnitPrice;
+            var nextStartsEarlierThanToday = next.ValidFrom < DateTime.UtcNow;
 
-            if (nextValid == null)
-                return null;
-
-            return new PriceDetailDTO(nextValid);
+            return (nextStartsLaterThanCurrent && nextStartsEarlierThanToday) &&
+                ((currentHasNoEnd && nextIsCheaperThanCurrent) ||
+                (nextStartsBeforeCurrentEnd && nextIsCheaperThanCurrent));
         }
     }
 }
