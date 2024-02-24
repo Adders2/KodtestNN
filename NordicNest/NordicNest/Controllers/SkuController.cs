@@ -27,11 +27,27 @@ namespace NordicNest.Controllers
         [Route("{id}")]
         public ActionResult<IEnumerable<PriceDetailsViewModel>> GetPriceDetails(string id)
         {
-            var priceDetails = _priceDetailService.GetPriceDetails(id);
+            if (string.IsNullOrEmpty(id))
+            {
+                return BadRequest("No Id was provided");
+            }
 
-            var vm = priceDetails.Select(pd => new PriceDetailsViewModel(pd)).ToList();
+            try
+            {
+                var priceDetails = _priceDetailService.GetPriceDetails(id);
 
-            return Ok(vm);
+                var vm = priceDetails.Select(pd => new PriceDetailsViewModel(pd)).ToList();
+
+                return Ok(vm);
+            }
+            catch (ArgumentNullException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500);
+            }
         }
     }
 }

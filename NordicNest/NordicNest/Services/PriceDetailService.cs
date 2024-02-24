@@ -17,6 +17,11 @@ namespace NordicNest.Services
         {
             var priceDetails = _priceDetailRepository.GetPriceDetails(id);
 
+            if (priceDetails == null || !priceDetails.Any())
+            {
+                throw new ArgumentNullException("No pricedetails could be found for provided id");
+            }
+
             return GetPriceIntervals(priceDetails);
         }
 
@@ -50,10 +55,15 @@ namespace NordicNest.Services
                     {
                         var priceDetail = remaining.ElementAtOrDefault(i);
 
+                        if (priceDetail == null)
+                        {
+                            break;
+                        }
+
                         // Cheaper and later start date.
                         var nextValidOne = remaining.FirstOrDefault(pd =>
                         {
-                            return (pd.UnitPrice <= priceDetail.UnitPrice && pd.ValidFrom > priceDetail.ValidFrom);
+                            return (pd.UnitPrice <= priceDetail?.UnitPrice && pd.ValidFrom > priceDetail.ValidFrom);
                         });
 
                         var lastPriceDetail = remaining.ElementAtOrDefault(i - 1);
@@ -68,7 +78,7 @@ namespace NordicNest.Services
                         if (nextValidOne != null)
                         {
                             // Starts later than current ends. Should be current and baseprice beginning at current end, and ending at nextvalids start
-                            if (nextValidOne?.ValidFrom > priceDetail.ValidUntil)
+                            if (nextValidOne?.ValidFrom > priceDetail?.ValidUntil)
                             {
                                 if (priceDetail.PriceValueId == basePrice.PriceValueId)
                                 {
