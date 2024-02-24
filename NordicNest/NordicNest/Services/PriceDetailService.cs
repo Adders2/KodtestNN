@@ -32,22 +32,28 @@ namespace NordicNest.Services
 
             foreach (var grouping in marketCurrencyGrouping)
             {
-                var firstBasePrice = grouping.FirstOrDefault();
+                var basePrice = grouping.FirstOrDefault();
 
-                foreach (var priceDetail in grouping)
+                for (int i = 0; i < grouping.Count(); i++)
                 {
-                    var nextValid = GetNextValidPriceDTO(priceDetail, grouping);
+                    var priceDetail = grouping.ElementAtOrDefault(i);
 
-                    if (nextValid == null)
+                    if (priceDetail != null)
                     {
-                        priceDetailDTOs.Add(new PriceDetailDTO(priceDetail));
+                        var nextValid = GetNextValidPriceDTO(priceDetail, grouping);
 
-                        // TODO: need to have the NEXT valid price startdate for an endate...
-                        priceDetailDTOs.Add(new PriceDetailDTO(firstBasePrice));
-                    }
-                    else
-                    {
-                        priceDetailDTOs.Add(new PriceDetailDTO(priceDetail, nextValid?.ValidFrom));
+                        if (nextValid == null)
+                        {
+                            priceDetailDTOs.Add(new PriceDetailDTO(priceDetail));
+
+                            var next = grouping.ElementAtOrDefault(i + 1);
+                            priceDetailDTOs.Add(
+                                new PriceDetailDTO(basePrice, validFrom: priceDetail?.ValidUntil, validUntil: next?.ValidFrom));
+                        }
+                        else
+                        {
+                            priceDetailDTOs.Add(new PriceDetailDTO(priceDetail, validUntil: nextValid?.ValidFrom));
+                        }
                     }
                 }
             }
@@ -63,7 +69,7 @@ namespace NordicNest.Services
             {
                 var nextStartsLaterThanCurrent = pd.ValidFrom > current.ValidFrom;
                 var currentHasNoEnd = current.ValidUntil.HasValue && current.ValidUntil.Value == DateTime.MinValue;
-                var nextStartsBeforeCurrentEnd = pd.ValidFrom < current.ValidUntil.Value;
+                var nextStartsBeforeCurrentEnd = current.ValidUntil.HasValue && pd.ValidFrom < current.ValidUntil.Value;
                 var nextIsCheaperThanCurrent = pd.UnitPrice < current.UnitPrice;
 
                 // Should no price increases be allowed from "basePrice"? DKK for EN market seems to have an increase from baseprice...
