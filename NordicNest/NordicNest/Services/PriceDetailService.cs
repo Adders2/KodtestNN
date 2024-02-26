@@ -27,8 +27,6 @@ namespace NordicNest.Services
 
         private List<PriceDetailDTO> GetPriceIntervals(IEnumerable<PriceDetail> priceDetails)
         {
-            priceDetails = priceDetails.Where(pd => pd.MarketId == "sv");
-
             var ordered = priceDetails.OrderBy(pd => pd.ValidFrom);
 
             // Handle prices per market and currency
