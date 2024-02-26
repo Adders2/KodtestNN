@@ -27,6 +27,8 @@ namespace NordicNest.Services
 
         private List<PriceDetailDTO> GetPriceIntervals(IEnumerable<PriceDetail> priceDetails)
         {
+            priceDetails = priceDetails.Where(pd => pd.MarketId == "sv");
+
             var ordered = priceDetails.OrderBy(pd => pd.ValidFrom);
 
             // Handle prices per market and currency
@@ -75,12 +77,19 @@ namespace NordicNest.Services
                             continue;
                         }
 
+                        var lastPricePost = priceDetailDTOs.LastOrDefault();
+
                         if (nextValidOne != null)
                         {
                             // Starts later than current ends. Should be current and baseprice beginning at current end, and ending at nextvalids start
                             if (nextValidOne?.ValidFrom > priceDetail?.ValidUntil)
                             {
-                                if (priceDetail.PriceValueId == basePrice.PriceValueId)
+                                // Starts later than current ends, but is not cheaper than previous, add baseprice
+                                if (lastPricePost != null && lastPricePost.Price == priceDetail.UnitPrice)
+                                {
+                                    priceDetailDTOs.Add(new PriceDetailDTO(basePrice, validFrom: lastPricePost.ValidUntil));
+                                }
+                                else if (priceDetail.PriceValueId == basePrice.PriceValueId)
                                 {
                                     priceDetailDTOs.Add(new PriceDetailDTO(basePrice, validUntil: nextValidOne.ValidFrom));
                                 }
@@ -93,14 +102,32 @@ namespace NordicNest.Services
                             // Starts earlier than current ends, cut current price short
                             else if (nextValidOne?.ValidFrom < priceDetail.ValidUntil)
                             {
-                                priceDetailDTOs.Add(new PriceDetailDTO(priceDetail, validUntil: nextValidOne.ValidFrom));
+                                // If last price post has the same price, prolong its interval.
+                                if (lastPricePost != null && lastPricePost.Price == priceDetail.UnitPrice)
+                                {
+                                    lastPricePost.ValidUntil = nextValidOne.ValidFrom;
+                                }
+                                else
+                                {
+                                    // Same price and longer period
+                                    var samePriceAndLongerInterval = priceDetail.UnitPrice == nextValidOne.UnitPrice && priceDetail.ValidUntil > nextValidOne.ValidUntil;
+                                    priceDetailDTOs.Add(new PriceDetailDTO(priceDetail, validUntil: samePriceAndLongerInterval ? priceDetail.ValidUntil : nextValidOne.ValidFrom));
+                                }
                             }
                         }
                         // No other valid. Should be current price replaced by baseprice at its end
                         else
                         {
-                            priceDetailDTOs.Add(new PriceDetailDTO(priceDetail));
-                            priceDetailDTOs.Add(new PriceDetailDTO(basePrice, validFrom: priceDetail.ValidUntil));
+                            // If no valid can be found
+                            if (lastPricePost != null && priceDetail.ValidFrom < lastPricePost.ValidFrom)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                priceDetailDTOs.Add(new PriceDetailDTO(priceDetail));
+                                priceDetailDTOs.Add(new PriceDetailDTO(basePrice, validFrom: priceDetail.ValidUntil));
+                            }
                         }
                     }
                 }
